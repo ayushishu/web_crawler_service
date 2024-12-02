@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: webcrawler
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: webcrawler
+  template:
+    metadata:
+      labels:
+        app: webcrawler
+    spec:
+      containers:
+        # Server container
+        - name: server
+          image: ayushishu/webcrawler-server:latest
+          ports:
+            - containerPort: 8080
+
+        # Client container
+        - name: client
+          image: ayushishu/webcrawler-client:latest
+          ports:
+            - containerPort: 3000
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: webcrawler-service
+spec:
+  selector:
+    app: webcrawler
+  ports:
+    - protocol: TCP
+      port: 3000
+      targetPort: 3000  # Client port
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: webcrawler-client-lb
+spec:
+  selector:
+    app: webcrawler
+  ports:
+    - protocol: TCP
+      port: 8081  # Exposing client service port to the external world
+      targetPort: 8081
+  type: LoadBalancer
